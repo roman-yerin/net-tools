@@ -15,6 +15,11 @@ rust-version = "1.91"
 [lints]
 workspace = true
 
+[features]
+default = []
+# Batched UDP I/O on Apple platforms via `sendmsg_x`/`recvmsg_x` (see noq-udp).
+fast-apple-datapath = ["noq-udp/fast-apple-datapath"]
+
 [dependencies]
 atomic-waker = "1.1.2"
 bytes = "1.7"

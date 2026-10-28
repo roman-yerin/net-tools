@@ -933,6 +933,14 @@ impl SocketState {
         let socket = tokio::net::UdpSocket::from_std(socket)?;
         let socket_ref = noq_udp::UdpSockRef::from(&socket);
         let socket_state = noq_udp::UdpSocketState::new(socket_ref)?;
+        // Without this, noq-udp sends and receives one datagram per syscall on Apple
+        // platforms, even with the feature compiled in.
+        #[cfg(all(target_vendor = "apple", feature = "fast-apple-datapath"))]
+        // SAFETY: noq-udp resolves `sendmsg_x`/`recvmsg_x` with `dlsym` on first use and
+        // permanently falls back to `sendmsg`/`recvmsg` if a symbol is missing.
+        unsafe {
+            socket_state.set_apple_fast_path();
+        }
 
         let local_addr = socket.local_addr()?;
         if addr.port() != 0 && local_addr.port() != addr.port() {
